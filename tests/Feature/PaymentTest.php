@@ -49,12 +49,11 @@ class PaymentTest extends TestCase
 
         $this->assertContains($response->status(), [201, 422]);
 
+        $response->assertJsonStructure(['payment', 'message']);
         if ($response->status() === 201) {
-            $response->assertJsonStructure(['payment', 'message'])
-                ->assertJsonFragment(['message' => 'Payment successful']);
+            $response->assertJsonFragment(['message' => 'Payment successful']);
         } else {
-            $response->assertJsonStructure(['payment', 'message'])
-                ->assertJsonFragment(['message' => 'Payment failed']);
+            $response->assertJsonFragment(['message' => 'Payment failed']);
         }
     }
 
