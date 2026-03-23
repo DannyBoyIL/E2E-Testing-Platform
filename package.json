@@ -4,15 +4,24 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "test": "bddgen && playwright test",
+    "test:specs": "playwright test --project=chromium",
+    "test:bdd": "bddgen && playwright test --project=chromium-bdd",
+    "allure:generate": "allure generate allure-results --clean -o allure-report",
+    "allure:open": "allure open allure-report",
+    "allure:report": "npm run allure:generate && npm run allure:open"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^25.5.0",
+    "allure-commandline": "^2.38.1",
+    "allure-playwright": "^3.6.0",
     "axios": "^1.13.6",
     "concurrently": "^9.0.1",
     "laravel-vite-plugin": "^3.0.0",
+    "playwright-bdd": "^8.5.0",
     "tailwindcss": "^4.2.2",
     "vite": "^8.0.1"
   },

@@ -24,8 +24,8 @@ class UpdateOrderRequest extends FormRequest
     {
         return [
             'status' => 'sometimes|in:pending,processing,completed,cancelled',
-            'total'  => 'sometimes|numeric|min:0',
-            'notes'  => 'nullable|string',
+            'total' => 'sometimes|numeric|min:0',
+            'notes' => 'nullable|string',
         ];
     }
 }

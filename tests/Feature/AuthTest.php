@@ -14,9 +14,9 @@ class AuthTest extends TestCase
     public function test_user_can_register(): void
     {
         $response = $this->postJson('/api/auth/register', [
-            'name'                  => 'Test User',
-            'email'                 => 'test@example.com',
-            'password'              => 'password123',
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
 
@@ -31,7 +31,7 @@ class AuthTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password123',
         ]);
 
@@ -42,7 +42,7 @@ class AuthTest extends TestCase
     public function test_login_fails_with_wrong_credentials(): void
     {
         $response = $this->postJson('/api/auth/login', [
-            'email'    => 'wrong@example.com',
+            'email' => 'wrong@example.com',
             'password' => 'wrongpassword',
         ]);
 
@@ -51,7 +51,7 @@ class AuthTest extends TestCase
 
     public function test_user_can_logout(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
@@ -62,7 +62,7 @@ class AuthTest extends TestCase
 
     public function test_authenticated_user_can_fetch_their_profile(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)

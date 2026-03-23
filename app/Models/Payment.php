@@ -20,7 +20,7 @@ class Payment extends Model
     ];
 
     protected $attributes = [
-        'status'         => 'pending',
+        'status' => 'pending',
         'payment_method' => 'credit_card',
     ];
 

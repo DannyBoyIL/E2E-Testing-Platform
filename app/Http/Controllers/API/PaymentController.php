@@ -32,13 +32,13 @@ class PaymentController extends Controller
         }
 
         // Simulate payment processing
-        $success = (bool) rand(0, 1);
+        $success = (bool)rand(0, 1);
 
         $payment = Payment::create([
-            'order_id'       => $order->id,
-            'user_id'        => Auth::id(),
-            'amount'         => $order->total,
-            'status'         => $success ? 'successful' : 'failed',
+            'order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'amount' => $order->total,
+            'status' => $success ? 'successful' : 'failed',
             'payment_method' => $request->payment_method ?? 'credit_card',
             'transaction_id' => $success ? Str::uuid() : null,
         ]);

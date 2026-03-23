@@ -12,7 +12,7 @@ class UserTest extends TestCase
 
     private function actingAsUser(): array
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [$user, $token];
@@ -35,7 +35,7 @@ class UserTest extends TestCase
         [$user, $token] = $this->actingAsUser();
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson("/api/users/{$user->id}");
+            ->getJson("/api/users/$user->id");
 
         $response->assertStatus(200)
             ->assertJsonFragment(['email' => $user->email]);
@@ -46,7 +46,7 @@ class UserTest extends TestCase
         [$user, $token] = $this->actingAsUser();
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson("/api/users/{$user->id}", [
+            ->putJson("/api/users/$user->id", [
                 'name' => 'Updated Name',
             ]);
 
@@ -57,10 +57,10 @@ class UserTest extends TestCase
     public function test_authenticated_user_can_delete_a_user(): void
     {
         [$user, $token] = $this->actingAsUser();
-        $target         = User::factory()->create();
+        $target = User::factory()->create();
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson("/api/users/{$target->id}");
+            ->deleteJson("/api/users/$target->id");
 
         $response->assertStatus(200)
             ->assertJsonFragment(['message' => 'User deleted successfully']);

@@ -1,0 +1,15 @@
+default:
+  suites:
+    api:
+      paths:
+        - '%paths.base%/tests/Behat/features'
+      contexts:
+        - ApiContext
+  autoload:
+    '': '%paths.base%/tests/Behat/bootstrap'
+  extensions:
+    FileLogExtension: ~
+  formatters:
+    pretty:
+      verbose: false
+    file_log: ~

@@ -13,7 +13,7 @@ class OrderTest extends TestCase
 
     private function actingAsUser(): array
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [$user, $token];
@@ -51,7 +51,7 @@ class OrderTest extends TestCase
         $order = Order::factory()->create(['user_id' => $user->id]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson("/api/orders/{$order->id}");
+            ->getJson("/api/orders/$order->id");
 
         $response->assertStatus(200)
             ->assertJsonFragment(['id' => $order->id]);
@@ -63,7 +63,7 @@ class OrderTest extends TestCase
         $order = Order::factory()->create(['user_id' => $user->id]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson("/api/orders/{$order->id}", [
+            ->putJson("/api/orders/$order->id", [
                 'status' => 'completed',
             ]);
 
@@ -77,7 +77,7 @@ class OrderTest extends TestCase
         $order = Order::factory()->create(['user_id' => $user->id]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson("/api/orders/{$order->id}");
+            ->deleteJson("/api/orders/$order->id");
 
         $response->assertStatus(200)
             ->assertJsonFragment(['message' => 'Order deleted successfully']);
@@ -88,11 +88,11 @@ class OrderTest extends TestCase
     public function test_user_cannot_access_another_users_order(): void
     {
         [$user, $token] = $this->actingAsUser();
-        $otherUser      = User::factory()->create();
-        $order          = Order::factory()->create(['user_id' => $otherUser->id]);
+        $otherUser = User::factory()->create();
+        $order = Order::factory()->create(['user_id' => $otherUser->id]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson("/api/orders/{$order->id}");
+            ->getJson("/api/orders/$order->id");
 
         $response->assertStatus(404);
     }

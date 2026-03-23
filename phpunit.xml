@@ -17,6 +17,12 @@
             <directory>app</directory>
         </include>
     </source>
+    <extensions>
+        <bootstrap class="Qameta\Allure\PHPUnit\AllureExtension">
+            <parameter name="config" value="allure.config.php"/>
+        </bootstrap>
+        <bootstrap class="Tests\Support\FileLoggerExtension"/>
+    </extensions>
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

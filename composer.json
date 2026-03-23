@@ -12,6 +12,8 @@
         "laravel/tinker": "^2.10.1"
     },
     "require-dev": {
+        "allure-framework/allure-phpunit": "^3.0",
+        "behat/behat": "^3.29",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
@@ -30,7 +32,10 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
-        }
+        },
+        "classmap": [
+            "tests/Behat/bootstrap"
+        ]
     },
     "scripts": {
         "setup": [
@@ -48,6 +53,9 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "test:bdd": [
+            "vendor/bin/behat"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

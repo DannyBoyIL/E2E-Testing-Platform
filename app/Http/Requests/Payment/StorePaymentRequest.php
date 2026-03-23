@@ -23,7 +23,7 @@ class StorePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'order_id'       => 'required|exists:orders,id',
+            'order_id' => 'required|exists:orders,id',
             'payment_method' => 'sometimes|in:credit_card,debit_card,paypal,bank_transfer',
         ];
     }

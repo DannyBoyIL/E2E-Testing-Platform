@@ -15,14 +15,14 @@ class PaymentResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'             => $this->id,
-            'order_id'       => $this->order_id,
-            'user_id'        => $this->user_id,
-            'amount'         => $this->amount,
-            'status'         => $this->status,
+            'id' => $this->id,
+            'order_id' => $this->order_id,
+            'user_id' => $this->user_id,
+            'amount' => $this->amount,
+            'status' => $this->status,
             'payment_method' => $this->payment_method,
             'transaction_id' => $this->transaction_id,
-            'created_at'     => $this->created_at,
+            'created_at' => $this->created_at,
         ];
     }
 }

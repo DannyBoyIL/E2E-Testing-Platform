@@ -14,7 +14,7 @@ class PaymentTest extends TestCase
 
     private function actingAsUser(): array
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [$user, $token];
@@ -25,7 +25,7 @@ class PaymentTest extends TestCase
         [$user, $token] = $this->actingAsUser();
         $order = Order::factory()->create(['user_id' => $user->id]);
         Payment::factory()->count(3)->create([
-            'user_id'  => $user->id,
+            'user_id' => $user->id,
             'order_id' => $order->id,
         ]);
 
@@ -43,7 +43,7 @@ class PaymentTest extends TestCase
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->postJson('/api/payments', [
-                'order_id'       => $order->id,
+                'order_id' => $order->id,
                 'payment_method' => 'credit_card',
             ]);
 
@@ -60,8 +60,8 @@ class PaymentTest extends TestCase
     public function test_user_cannot_pay_for_another_users_order(): void
     {
         [$user, $token] = $this->actingAsUser();
-        $otherUser      = User::factory()->create();
-        $order          = Order::factory()->create(['user_id' => $otherUser->id]);
+        $otherUser = User::factory()->create();
+        $order = Order::factory()->create(['user_id' => $otherUser->id]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->postJson('/api/payments', [
@@ -76,7 +76,7 @@ class PaymentTest extends TestCase
         [$user, $token] = $this->actingAsUser();
         $order = Order::factory()->create([
             'user_id' => $user->id,
-            'status'  => 'completed',
+            'status' => 'completed',
         ]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
@@ -91,14 +91,14 @@ class PaymentTest extends TestCase
     public function test_authenticated_user_can_view_a_payment(): void
     {
         [$user, $token] = $this->actingAsUser();
-        $order   = Order::factory()->create(['user_id' => $user->id]);
+        $order = Order::factory()->create(['user_id' => $user->id]);
         $payment = Payment::factory()->create([
-            'user_id'  => $user->id,
+            'user_id' => $user->id,
             'order_id' => $order->id,
         ]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson("/api/payments/{$payment->id}");
+            ->getJson("/api/payments/$payment->id");
 
         $response->assertStatus(200)
             ->assertJsonFragment(['id' => $payment->id]);
