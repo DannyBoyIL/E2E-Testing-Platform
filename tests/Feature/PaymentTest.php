@@ -6,8 +6,15 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Qameta\Allure\Attribute\DisplayName;
+use Qameta\Allure\Attribute\ParentSuite;
+use Qameta\Allure\Attribute\SubSuite;
+use Qameta\Allure\Attribute\Suite;
 use Tests\TestCase;
 
+#[ParentSuite('PHPUnit')]
+#[Suite(PaymentTest::class)]
+#[SubSuite('Payments')]
 class PaymentTest extends TestCase
 {
     use RefreshDatabase;
@@ -20,6 +27,7 @@ class PaymentTest extends TestCase
         return [$user, $token];
     }
 
+    #[DisplayName("Authenticated user can list their payments")]
     public function test_authenticated_user_can_list_their_payments(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -36,6 +44,7 @@ class PaymentTest extends TestCase
             ->assertJsonCount(3, 'data');
     }
 
+    #[DisplayName("User can process a payment for their order")]
     public function test_user_can_process_a_payment_for_their_order(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -57,6 +66,7 @@ class PaymentTest extends TestCase
         }
     }
 
+    #[DisplayName("User cannot pay for another users order")]
     public function test_user_cannot_pay_for_another_users_order(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -71,6 +81,7 @@ class PaymentTest extends TestCase
         $response->assertStatus(404);
     }
 
+    #[DisplayName("User cannot pay for already completed order")]
     public function test_user_cannot_pay_for_already_completed_order(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -88,6 +99,7 @@ class PaymentTest extends TestCase
             ->assertJsonFragment(['message' => 'Order is already paid']);
     }
 
+    #[DisplayName("Authenticated user can view a payment")]
     public function test_authenticated_user_can_view_a_payment(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -104,6 +116,7 @@ class PaymentTest extends TestCase
             ->assertJsonFragment(['id' => $payment->id]);
     }
 
+    #[DisplayName("Unauthenticated user cannot access payments")]
     public function test_unauthenticated_user_cannot_access_payments(): void
     {
         $response = $this->getJson('/api/payments');

@@ -4,8 +4,15 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Qameta\Allure\Attribute\DisplayName;
+use Qameta\Allure\Attribute\ParentSuite;
+use Qameta\Allure\Attribute\SubSuite;
+use Qameta\Allure\Attribute\Suite;
 use Tests\TestCase;
 
+#[ParentSuite('PHPUnit')]
+#[Suite(UserTest::class)]
+#[SubSuite('Users')]
 class UserTest extends TestCase
 {
     use RefreshDatabase;
@@ -18,6 +25,7 @@ class UserTest extends TestCase
         return [$user, $token];
     }
 
+    #[DisplayName("Authenticated user can list users")]
     public function test_authenticated_user_can_list_users(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -30,6 +38,7 @@ class UserTest extends TestCase
             ->assertJsonStructure(['data' => [['id', 'name', 'email']]]);
     }
 
+    #[DisplayName("Authenticated user can view a user")]
     public function test_authenticated_user_can_view_a_user(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -41,6 +50,7 @@ class UserTest extends TestCase
             ->assertJsonFragment(['email' => $user->email]);
     }
 
+    #[DisplayName("Authenticated user can update a user")]
     public function test_authenticated_user_can_update_a_user(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -54,6 +64,7 @@ class UserTest extends TestCase
             ->assertJsonFragment(['name' => 'Updated Name']);
     }
 
+    #[DisplayName("Authenticated user can delete a user")]
     public function test_authenticated_user_can_delete_a_user(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -68,6 +79,7 @@ class UserTest extends TestCase
         $this->assertDatabaseMissing('users', ['id' => $target->id]);
     }
 
+    #[DisplayName("Unauthenticated user cannot access users")]
     public function test_unauthenticated_user_cannot_access_users(): void
     {
         $response = $this->getJson('/api/users');

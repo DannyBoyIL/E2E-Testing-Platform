@@ -1,0 +1,217 @@
+name: CI
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Job 1 — PHPUnit  (SQLite in-memory, no MySQL needed, runs fast)
+# Job 2 — E2E      (Behat + Playwright, needs MySQL + running Laravel server)
+# Job 3 — Report   (merges both Allure results into one downloadable artifact)
+# ─────────────────────────────────────────────────────────────────────────────
+
+jobs:
+
+  # ── PHPUnit ─────────────────────────────────────────────────────────────────
+  phpunit:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, xml, curl, zip, bcmath, tokenizer
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Configure environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run PHPUnit
+        run: php artisan test
+
+      - name: Upload PHPUnit Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-phpunit
+          path: allure-results/
+          retention-days: 7
+
+  # ── E2E (Behat + Playwright) ────────────────────────────────────────────────
+  e2e:
+    name: E2E (Behat + Playwright)
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: e2e_testing_platform
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -ppassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=6
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql, pdo_sqlite, sqlite3, xml, curl, zip, bcmath, tokenizer
+          coverage: none
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Configure environment
+        run: |
+          cp .env.example .env
+          {
+            echo "DB_CONNECTION=mysql"
+            echo "DB_HOST=127.0.0.1"
+            echo "DB_PORT=3306"
+            echo "DB_DATABASE=e2e_testing_platform"
+            echo "DB_USERNAME=root"
+            echo "DB_PASSWORD=password"
+            echo "APP_URL=http://127.0.0.1:8000"
+          } >> .env
+          php artisan key:generate
+
+      - name: Migrate and seed database
+        run: |
+          php artisan migrate --force
+          php artisan db:seed --force
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Start Laravel server
+        run: PHP_CLI_SERVER_WORKERS=4 php artisan serve --host=0.0.0.0 --port=8000 &
+
+      - name: Wait for Laravel server
+        run: |
+          echo "Waiting for server..."
+          for i in $(seq 1 30); do
+            curl -s http://127.0.0.1:8000 > /dev/null && echo "Server ready." && break
+            sleep 1
+          done
+
+      - name: Run Behat
+        run: ./vendor/bin/behat --no-interaction
+
+      - name: Run Playwright
+        run: npm test
+
+      - name: Upload E2E Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-e2e
+          path: allure-results/
+          retention-days: 7
+
+      - name: Upload Playwright report (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── Allure Report ───────────────────────────────────────────────────────────
+  report:
+    name: Allure Report
+    runs-on: ubuntu-latest
+    needs: [phpunit, e2e]
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Download PHPUnit Allure results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-phpunit
+          path: allure-results/
+        continue-on-error: true
+
+      - name: Download E2E Allure results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-e2e
+          path: allure-results/
+        continue-on-error: true
+
+      - name: Generate unified Allure report
+        run: npm run allure:generate
+
+      - name: Upload Allure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 14

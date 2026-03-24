@@ -5,8 +5,15 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Qameta\Allure\Attribute\DisplayName;
+use Qameta\Allure\Attribute\ParentSuite;
+use Qameta\Allure\Attribute\SubSuite;
+use Qameta\Allure\Attribute\Suite;
 use Tests\TestCase;
 
+#[ParentSuite('PHPUnit')]
+#[Suite(OrderTest::class)]
+#[SubSuite('Orders')]
 class OrderTest extends TestCase
 {
     use RefreshDatabase;
@@ -19,6 +26,7 @@ class OrderTest extends TestCase
         return [$user, $token];
     }
 
+    #[DisplayName("Authenticated user can list their orders")]
     public function test_authenticated_user_can_list_their_orders(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -31,6 +39,7 @@ class OrderTest extends TestCase
             ->assertJsonCount(3, 'data');
     }
 
+    #[DisplayName("Authenticated user can create an order")]
     public function test_authenticated_user_can_create_an_order(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -45,6 +54,7 @@ class OrderTest extends TestCase
             ->assertJsonFragment(['status' => 'pending'])->assertJsonPath('data.total', '99.99');
     }
 
+    #[DisplayName("Authenticated user can view an order")]
     public function test_authenticated_user_can_view_an_order(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -57,6 +67,7 @@ class OrderTest extends TestCase
             ->assertJsonFragment(['id' => $order->id]);
     }
 
+    #[DisplayName("Authenticated user can update an order")]
     public function test_authenticated_user_can_update_an_order(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -71,6 +82,7 @@ class OrderTest extends TestCase
             ->assertJsonFragment(['status' => 'completed']);
     }
 
+    #[DisplayName("Authenticated user can delete an order")]
     public function test_authenticated_user_can_delete_an_order(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -85,6 +97,7 @@ class OrderTest extends TestCase
         $this->assertDatabaseMissing('orders', ['id' => $order->id]);
     }
 
+    #[DisplayName("User cannot access another users order")]
     public function test_user_cannot_access_another_users_order(): void
     {
         [$user, $token] = $this->actingAsUser();
@@ -97,6 +110,7 @@ class OrderTest extends TestCase
         $response->assertStatus(404);
     }
 
+    #[DisplayName("Unauthenticated user cannot access orders")]
     public function test_unauthenticated_user_cannot_access_orders(): void
     {
         $response = $this->getJson('/api/orders');

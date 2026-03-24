@@ -3,42 +3,74 @@ import fs from 'fs';
 import path from 'path';
 
 class FileReporter implements Reporter {
-    private logPath!: string;
+    private logPaths = new Map<string, string>();
     private startTime!: Date;
+    private runStamp!: string;
 
     onBegin(_config: FullConfig, _suite: Suite): void {
-        const logsDir = path.join(process.cwd(), 'logs');
+        this.startTime = new Date();
+        this.runStamp = this.startTime.toISOString().replace(/[:.]/g, '-');
+        const baseDir = path.join(process.cwd(), 'storage', 'logs');
+        if (!fs.existsSync(baseDir)) {
+            fs.mkdirSync(baseDir, { recursive: true });
+        }
+    }
+
+    private getLogPath(projectName: string): string {
+        const safeName = projectName && projectName.trim() ? projectName : 'playwright';
+        const existing = this.logPaths.get(safeName);
+        if (existing) {
+            return existing;
+        }
+
+        const logsDir = path.join(process.cwd(), 'storage', 'logs', safeName);
         if (!fs.existsSync(logsDir)) {
             fs.mkdirSync(logsDir, { recursive: true });
         }
-        this.startTime = new Date();
-        const timestamp = this.startTime.toISOString().replace(/[:.]/g, '-');
-        this.logPath = path.join(logsDir, `test-run-${timestamp}.log`);
+
+        const logPath = path.join(logsDir, `test-run-${this.runStamp}.log`);
         fs.writeFileSync(
-            this.logPath,
+            logPath,
             `Test run started: ${this.startTime.toISOString()}\n${'─'.repeat(80)}\n\n`,
         );
+        this.logPaths.set(safeName, logPath);
+        return logPath;
+    }
+
+    private getProjectName(test: TestCase): string {
+        let suite = test.parent;
+        while (suite) {
+            if (suite.type === 'project') {
+                return suite.title || 'playwright';
+            }
+            suite = suite.parent;
+        }
+        return 'playwright';
     }
 
     onTestEnd(test: TestCase, result: TestResult): void {
         const status = result.status.toUpperCase().padEnd(7);
         const duration = `${result.duration}ms`.padStart(8);
         const title = test.titlePath().slice(1).join(' › ');
-        fs.appendFileSync(this.logPath, `[${status}] ${duration}  ${title}\n`);
+        const projectName = this.getProjectName(test);
+        const logPath = this.getLogPath(projectName);
+        fs.appendFileSync(logPath, `[${status}] ${duration}  ${title}\n`);
 
         for (const err of result.errors) {
             const msg = (err.message ?? 'Unknown error').split('\n')[0];
-            fs.appendFileSync(this.logPath, `           ↳ ${msg}\n`);
+            fs.appendFileSync(logPath, `           ↳ ${msg}\n`);
         }
     }
 
     onEnd(result: FullResult): void {
         const duration = Date.now() - this.startTime.getTime();
-        fs.appendFileSync(
-            this.logPath,
-            `\n${'─'.repeat(80)}\nFinished: ${result.status.toUpperCase()}  (${duration}ms)\n`,
-        );
-        console.log(`\n📋 Test log: ${this.logPath}`);
+        for (const logPath of this.logPaths.values()) {
+            fs.appendFileSync(
+                logPath,
+                `\n${'─'.repeat(80)}\nFinished: ${result.status.toUpperCase()}  (${duration}ms)\n`,
+            );
+            console.log(`\n📋 Test log: ${logPath}`);
+        }
     }
 }
 
