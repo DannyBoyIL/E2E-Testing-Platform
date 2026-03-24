@@ -48,7 +48,7 @@ class PaymentTest extends TestCase
     public function test_user_can_process_a_payment_for_their_order(): void
     {
         [$user, $token] = $this->actingAsUser();
-        $order = Order::factory()->create(['user_id' => $user->id]);
+        $order = Order::factory()->create(['user_id' => $user->id, 'status' => 'pending']);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->postJson('/api/payments', [
