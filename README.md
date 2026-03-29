@@ -74,6 +74,45 @@ docker compose up --build
 # Allure report: http://localhost:8080
 ```
 
+## Example Tests
+The following Playwright tests cover the authentication flow — valid login, invalid credentials, redirect behaviour, and navigation. Each test uses `page.getByRole` and `page.getByPlaceholder` for accessible, stable locators:
+
+```typescript
+test('shows login page by default', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveURL(/login/);
+    await expect(page.getByPlaceholder('Email').first()).toBeVisible();
+    await expect(page.getByPlaceholder('Password').first()).toBeVisible();
+});
+
+test('user can login with valid credentials', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByPlaceholder('Email').fill('admin@test.com');
+    await page.getByPlaceholder('Password').fill('password123');
+    await page.getByRole('button', { name: 'Login' }).click();
+    await expect(page).toHaveURL(BASE_URL + '/');
+    await expect(page.getByText('E2E Testing Platform')).toBeVisible();
+});
+
+test('user sees error with invalid credentials', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByPlaceholder('Email').first().fill('wrong@test.com');
+    await page.getByPlaceholder('Password').first().fill('wrongpassword');
+    await page.getByRole('button', { name: 'Login' }).click();
+    await expect(page.getByText('Invalid credentials')).toBeVisible();
+});
+
+test('user can navigate to register page', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('link', { name: 'Register' }).click();
+    await expect(page).toHaveURL(/register/);
+    await expect(page.getByPlaceholder('Name')).toBeVisible();
+});
+```
+
+These tests run against the live Laravel API backend served locally or in Docker. The same authentication domain is also covered at the unit level by PHPUnit and at the API level by Behat — giving three independent test layers over the same feature.
+
+
 ## Project Structure
 ```text
 e2e-testing-platform/
