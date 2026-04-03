@@ -12,9 +12,9 @@ This platform targets four core domains:
 * **API-first Laravel backend** with domain-separated controllers, services, and form requests
 * **React + Vite SPA frontend** fully decoupled from the backend, consuming the API via Axios
 * **Laravel Sanctum** token-based authentication for SPA flows
-* **PHPUnit feature tests** covering all API endpoints with database isolation via `RefreshDatabase`
-* **Behat BDD API tests** with Gherkin scenarios and a Guzzle-based HTTP context
-* **Playwright E2E tests** (native specs + Playwright-BDD) simulating real browser flows
+* **PHPUnit feature tests** covering all API endpoints with database isolation via `RefreshDatabase` — unit-level isolation at the HTTP contract boundary
+* **Behat BDD API tests** with Gherkin scenarios and a Guzzle-based HTTP context — exercises the full Laravel stack (route → service → database), functioning as integration tests written in stakeholder-readable language
+* **Playwright E2E tests** (native specs + Playwright-BDD) simulating real browser flows — browser-driven end-to-end tests across the full stack including the React SPA
 * **Allure reporting** unified across PHPUnit, Behat, and Playwright into a single HTML report
 * **Structured file logging** for every test framework, written to `storage/logs/`
 * **Docker** containerization with MySQL, a 4-worker PHP server, and an Allure report server
@@ -312,22 +312,26 @@ Two BDD layers cover the same four domains from different angles.
 Scenarios are written in Gherkin and executed against the live API using `ApiContext` (Guzzle HTTP client). Feature files live in `tests/Behat/features/`.
 
 ```gherkin
-Scenario: User can login
+Scenario: Login with valid credentials
   When I POST to "/api/auth/login" with:
     | email    | admin@test.com |
     | password | password123    |
   Then the response status should be 200
   And the response should contain "token"
+  And the response should contain "user"
 ```
 
 ### Playwright-BDD (Browser-level)
 Uses `playwright-bdd` to drive Chromium with the same Gherkin syntax. Feature files live in `e2e/features/`, step definitions in `e2e/steps/`.
 
 ```gherkin
-Scenario: Authenticated user sees their orders
-  Given I am logged in
-  When I go to the orders page
-  Then I should see the orders table
+Background:
+  Given I am on the login page with a clean session
+
+Scenario: Successful login with valid credentials
+  When I login with email "admin@test.com" and password "password123"
+  Then I should be redirected to the dashboard
+  And I should see "E2E Testing Platform"
 ```
 
 Run `npm test` to execute both the native Playwright specs and the BDD feature tests in a single pass.
