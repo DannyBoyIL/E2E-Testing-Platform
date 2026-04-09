@@ -16,7 +16,6 @@ test.describe('Payments', () => {
     });
 
     test('unauthenticated user is redirected to login', async ({ page }) => {
-        await page.evaluate(() => localStorage.clear());
         await page.goto('/payments');
         await expect(page).toHaveURL(/login/);
     });

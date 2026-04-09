@@ -5,7 +5,6 @@ const BASE_URL = 'http://127.0.0.1:8000';
 test.describe('Authentication', () => {
 
     test.beforeEach(async ({ page }) => {
-        await page.evaluate(() => localStorage.clear());
         await page.goto('/login');
     });
 

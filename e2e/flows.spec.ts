@@ -46,8 +46,6 @@ test.describe('User Flows', () => {
     });
 
     test('unauthenticated access to protected routes redirects to login', async ({ page }) => {
-        await page.evaluate(() => localStorage.clear());
-
         const protectedRoutes = ['/', '/users', '/orders', '/payments'];
 
         for (const route of protectedRoutes) {
