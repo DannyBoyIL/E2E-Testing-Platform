@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Job 1 — PHPUnit  (SQLite in-memory, no MySQL needed, runs fast)
 # Job 2 — E2E      (Behat + Playwright, needs MySQL + running Laravel server)
@@ -23,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
@@ -33,7 +30,7 @@ jobs:
           coverage: none
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}
@@ -52,7 +49,7 @@ jobs:
 
       - name: Upload PHPUnit Allure results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: allure-results-phpunit
           path: allure-results/
@@ -78,7 +75,7 @@ jobs:
           --health-retries=6
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
@@ -87,14 +84,14 @@ jobs:
           extensions: mbstring, pdo, pdo_mysql, pdo_sqlite, sqlite3, xml, curl, zip, bcmath, tokenizer
           coverage: none
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}
@@ -107,7 +104,7 @@ jobs:
         run: npm ci
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ hashFiles('package-lock.json') }}
@@ -158,7 +155,7 @@ jobs:
 
       - name: Upload E2E Allure results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: allure-results-e2e
           path: allure-results/
@@ -166,7 +163,7 @@ jobs:
 
       - name: Upload Playwright report (on failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/
@@ -180,26 +177,26 @@ jobs:
     if: always()
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install Node dependencies
         run: npm ci
 
       - name: Download PHPUnit Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: allure-results-phpunit
           path: allure-results/
         continue-on-error: true
 
       - name: Download E2E Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: allure-results-e2e
           path: allure-results/
@@ -209,7 +206,7 @@ jobs:
         run: npm run allure:generate
 
       - name: Upload Allure report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: allure-report
           path: allure-report/
