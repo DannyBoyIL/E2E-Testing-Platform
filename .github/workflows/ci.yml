@@ -125,6 +125,7 @@ jobs:
             echo "DB_PASSWORD=password"
             echo "APP_URL=http://127.0.0.1:8000"
           } >> .env
+          grep '^TEST_' .env >> $GITHUB_ENV
           php artisan key:generate
 
       - name: Migrate and seed database
