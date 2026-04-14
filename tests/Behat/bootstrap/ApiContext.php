@@ -20,7 +20,7 @@ class ApiContext implements Context
         // getenv() can read TEST_* variables the same way env() does in Laravel.
         $root = dirname(__DIR__, 3);
         if (file_exists($root . '/.env')) {
-            \Dotenv\Dotenv::createImmutable($root)->load();
+            \Dotenv\Dotenv::createUnsafeImmutable($root)->load();
         }
 
         $this->client = new Client([
