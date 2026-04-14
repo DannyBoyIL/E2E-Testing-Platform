@@ -123,7 +123,7 @@ Scenario: Successful login with valid credentials
   And I should see "E2E Testing Platform"
 
 Scenario: Error shown for invalid credentials
-  When I login with email "wrong@test.com" and password "wrongpassword"
+  When I login with invalid credentials
   Then I should see the error message "Invalid credentials"
 ```
 

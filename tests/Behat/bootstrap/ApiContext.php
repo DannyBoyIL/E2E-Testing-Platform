@@ -15,8 +15,16 @@ class ApiContext implements Context
 
     public function __construct()
     {
+        // Behat runs as a standalone process and does not boot Laravel, so the
+        // .env file is never loaded automatically. Load it here so that
+        // getenv() can read TEST_* variables the same way env() does in Laravel.
+        $root = dirname(__DIR__, 3);
+        if (file_exists($root . '/.env')) {
+            \Dotenv\Dotenv::createImmutable($root)->load();
+        }
+
         $this->client = new Client([
-            'base_uri' => self::BASE_URL,
+            'base_uri'    => self::BASE_URL,
             'http_errors' => false,
         ]);
     }
