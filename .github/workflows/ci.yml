@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Job 1 — PHPUnit  (SQLite in-memory, no MySQL needed, runs fast)
 # Job 2 — E2E      (Behat + Playwright, needs MySQL + running Laravel server)
