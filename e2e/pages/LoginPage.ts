@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import {Page, Locator} from '@playwright/test';
 
 export class LoginPage {
 
@@ -9,7 +9,7 @@ export class LoginPage {
     constructor(private readonly page: Page) {
         this.emailInput = page.getByPlaceholder('Email');
         this.passwordInput = page.getByPlaceholder('Password');
-        this.loginButton = page.getByRole('button', { name: 'Login' });
+        this.loginButton = page.getByRole('button', {name: 'Login'});
     }
 
     async goto() {

@@ -8,13 +8,13 @@ Feature: Orders API
     Then the response status should be 401
 
   Scenario: Authenticated user can retrieve the orders list
-    Given I am authenticated as "admin@test.com" with password "password123"
+    Given I am authenticated as the admin user
     When I GET "/api/orders"
     Then the response status should be 200
     And the response should not be empty
 
   Scenario: Authenticated user can create an order
-    Given I am authenticated as "admin@test.com" with password "password123"
+    Given I am authenticated as the admin user
     When I POST to "/api/orders" with:
       | status | pending |
       | total  | 99.99   |

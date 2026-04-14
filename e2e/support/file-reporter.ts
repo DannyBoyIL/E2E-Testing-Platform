@@ -1,4 +1,4 @@
-import type { Reporter, TestCase, TestResult, FullResult, Suite, FullConfig } from '@playwright/test/reporter';
+import type {Reporter, TestCase, TestResult, FullResult, Suite, FullConfig} from '@playwright/test/reporter';
 import fs from 'fs';
 import path from 'path';
 
@@ -12,7 +12,7 @@ class FileReporter implements Reporter {
         this.runStamp = this.startTime.toISOString().replace(/[:.]/g, '-');
         const baseDir = path.join(process.cwd(), 'storage', 'logs');
         if (!fs.existsSync(baseDir)) {
-            fs.mkdirSync(baseDir, { recursive: true });
+            fs.mkdirSync(baseDir, {recursive: true});
         }
     }
 
@@ -25,7 +25,7 @@ class FileReporter implements Reporter {
 
         const logsDir = path.join(process.cwd(), 'storage', 'logs', safeName);
         if (!fs.existsSync(logsDir)) {
-            fs.mkdirSync(logsDir, { recursive: true });
+            fs.mkdirSync(logsDir, {recursive: true});
         }
 
         const logPath = path.join(logsDir, `test-run-${this.runStamp}.log`);
@@ -38,7 +38,7 @@ class FileReporter implements Reporter {
     }
 
     private getProjectName(test: TestCase): string {
-        let suite = test.parent;
+        let suite: Suite | undefined = test.parent;
         while (suite) {
             if (suite.type === 'project') {
                 return suite.title || 'playwright';

@@ -1,6 +1,6 @@
-import { test as base, Page } from '@playwright/test';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
+import {test as base, Page} from '@playwright/test';
+import {LoginPage} from './pages/LoginPage';
+import {RegisterPage} from './pages/RegisterPage';
 
 type Fixtures = {
     loginPage: LoginPage;
@@ -9,21 +9,21 @@ type Fixtures = {
 };
 
 export const test = base.extend<Fixtures>({
-    loginPage: async ({ page }, use) => {
+    loginPage: async ({page}, use) => {
         await use(new LoginPage(page));
     },
 
-    registerPage: async ({ page }, use) => {
+    registerPage: async ({page}, use) => {
         await use(new RegisterPage(page));
     },
 
-    authenticatedPage: async ({ page }, use) => {
+    authenticatedPage: async ({page}, use) => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
-        await loginPage.login('admin@test.com', 'password123');
+        await loginPage.login(process.env.TEST_USER_EMAIL!, process.env.TEST_USER_PASSWORD!);
         await page.waitForURL('/');
         await use(page);
     },
 });
 
-export { expect } from '@playwright/test';
+export {expect} from '@playwright/test';

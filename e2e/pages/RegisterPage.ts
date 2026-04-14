@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import {Page, Locator} from '@playwright/test';
 
 export class RegisterPage {
 
@@ -11,9 +11,9 @@ export class RegisterPage {
     constructor(private readonly page: Page) {
         this.nameInput = page.getByPlaceholder('Name');
         this.emailInput = page.getByPlaceholder('Email');
-        this.passwordInput = page.getByPlaceholder('Password', { exact: true });
+        this.passwordInput = page.getByPlaceholder('Password', {exact: true});
         this.confirmPasswordInput = page.getByPlaceholder('Confirm Password');
-        this.registerButton = page.getByRole('button', { name: 'Register' });
+        this.registerButton = page.getByRole('button', {name: 'Register'});
     }
 
     async goto() {

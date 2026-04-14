@@ -21,11 +21,14 @@ class AuthTest extends TestCase
     #[DisplayName("User can register")]
     public function test_user_can_register(): void
     {
+        $password = env('TEST_USER_PASSWORD')
+            ?? throw new \RuntimeException('TEST_USER_PASSWORD is not set. Add it to your .env file.');
+
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => $password,
+            'password_confirmation' => $password,
         ]);
 
         $response->assertStatus(201)
@@ -35,13 +38,15 @@ class AuthTest extends TestCase
     #[DisplayName("User can login")]
     public function test_user_can_login(): void
     {
+        $password = env('TEST_USER_PASSWORD')
+            ?? throw new \RuntimeException('TEST_USER_PASSWORD is not set. Add it to your .env file.');
         $user = User::factory()->create([
-            'password' => bcrypt('password123'),
+            'password' => bcrypt($password),
         ]);
 
         $response = $this->postJson('/api/auth/login', [
             'email' => $user->email,
-            'password' => 'password123',
+            'password' => $password,
         ]);
 
         $response->assertStatus(200)
@@ -51,9 +56,14 @@ class AuthTest extends TestCase
     #[DisplayName("Login fails with wrong credentials")]
     public function test_login_fails_with_wrong_credentials(): void
     {
+        $email = env('TEST_WRONG_EMAIL')
+            ?? throw new \RuntimeException('TEST_WRONG_EMAIL is not set. Add it to your .env file.');
+        $password = env('TEST_WRONG_PASSWORD')
+            ?? throw new \RuntimeException('TEST_WRONG_PASSWORD is not set. Add it to your .env file.');
+
         $response = $this->postJson('/api/auth/login', [
-            'email' => 'wrong@example.com',
-            'password' => 'wrongpassword',
+            'email' => $email,
+            'password' => $password,
         ]);
 
         $response->assertStatus(401);

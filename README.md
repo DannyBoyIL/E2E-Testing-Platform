@@ -61,9 +61,9 @@ npm run dev
 
 Visit: `http://127.0.0.1:8000`
 
-Login with seeded admin account:
-* **Email:** admin@test.com
-* **Password:** password123
+Login with the seeded admin account using the credentials you configured in `.env`:
+* **Email:** value of `TEST_USER_EMAIL`
+* **Password:** value of `TEST_USER_PASSWORD`
 
 ### Docker
 ```bash
@@ -75,42 +75,68 @@ docker compose up --build
 ```
 
 ## Example Tests
-The following Playwright tests cover the authentication flow — valid login, invalid credentials, redirect behaviour, and navigation. Each test uses `page.getByRole` and `page.getByPlaceholder` for accessible, stable locators:
+The following tests cover the authentication flow across all three layers.
+
+### Playwright (native spec)
+Tests use the `loginPage` fixture (Page Object Model) and read credentials from environment variables — no credentials are hardcoded in test files:
 
 ```typescript
-test('shows login page by default', async ({ page }) => {
-    await page.goto('/');
-    await expect(page).toHaveURL(/login/);
-    await expect(page.getByPlaceholder('Email').first()).toBeVisible();
-    await expect(page.getByPlaceholder('Password').first()).toBeVisible();
-});
+test.describe('Authentication', () => {
 
-test('user can login with valid credentials', async ({ page }) => {
-    await page.goto('/login');
-    await page.getByPlaceholder('Email').fill('admin@test.com');
-    await page.getByPlaceholder('Password').fill('password123');
-    await page.getByRole('button', { name: 'Login' }).click();
-    await expect(page).toHaveURL(BASE_URL + '/');
-    await expect(page.getByText('E2E Testing Platform')).toBeVisible();
-});
+    test.beforeEach(async ({page}) => {
+        await page.goto('/login');
+    });
 
-test('user sees error with invalid credentials', async ({ page }) => {
-    await page.goto('/login');
-    await page.getByPlaceholder('Email').first().fill('wrong@test.com');
-    await page.getByPlaceholder('Password').first().fill('wrongpassword');
-    await page.getByRole('button', { name: 'Login' }).click();
-    await expect(page.getByText('Invalid credentials')).toBeVisible();
-});
+    test('shows login page by default', async ({page}) => {
+        await page.goto('/');
+        await expect(page).toHaveURL(/login/);
+        await expect(page.getByPlaceholder('Email').first()).toBeVisible();
+        await expect(page.getByPlaceholder('Password').first()).toBeVisible();
+    });
 
-test('user can navigate to register page', async ({ page }) => {
-    await page.goto('/login');
-    await page.getByRole('link', { name: 'Register' }).click();
-    await expect(page).toHaveURL(/register/);
-    await expect(page.getByPlaceholder('Name')).toBeVisible();
+    test('user can login with valid credentials', async ({loginPage, page}) => {
+        await loginPage.login(process.env.TEST_USER_EMAIL!, process.env.TEST_USER_PASSWORD!);
+        await expect(page).toHaveURL(BASE_URL + '/');
+        await expect(page.getByText('E2E Testing Platform')).toBeVisible();
+    });
+
+    test('user sees error with invalid credentials', async ({loginPage, page}) => {
+        await loginPage.login(process.env.TEST_WRONG_EMAIL!, process.env.TEST_WRONG_PASSWORD!);
+        await expect(page.getByText('Invalid credentials')).toBeVisible();
+    });
+
+    test('user can navigate to register page', async ({page}) => {
+        await page.getByRole('link', {name: 'Register'}).click();
+        await expect(page).toHaveURL(/register/);
+        await expect(page.getByPlaceholder('Name')).toBeVisible();
+    });
 });
 ```
 
-These tests run against the live Laravel API backend served locally or in Docker. The same authentication domain is also covered at the unit level by PHPUnit and at the API level by Behat — giving three independent test layers over the same feature.
+### Playwright-BDD (Gherkin spec)
+The same scenarios expressed in Gherkin, backed by step definitions that also read from environment variables:
+
+```gherkin
+Scenario: Successful login with valid credentials
+  When I login as the admin user
+  Then I should be redirected to the dashboard
+  And I should see "E2E Testing Platform"
+
+Scenario: Error shown for invalid credentials
+  When I login with email "wrong@test.com" and password "wrongpassword"
+  Then I should see the error message "Invalid credentials"
+```
+
+### Behat (API-level)
+```gherkin
+Scenario: Login with valid credentials
+  When I POST the admin login to "/api/auth/login"
+  Then the response status should be 200
+  And the response should contain "token"
+  And the response should contain "user"
+```
+
+These tests run against the live Laravel API backend served locally or in Docker. The same authentication domain is covered at three independent layers — PHPUnit (HTTP contract), Behat (API BDD), and Playwright (full browser E2E).
 
 
 ## Project Structure
@@ -313,9 +339,7 @@ Scenarios are written in Gherkin and executed against the live API using `ApiCon
 
 ```gherkin
 Scenario: Login with valid credentials
-  When I POST to "/api/auth/login" with:
-    | email    | admin@test.com |
-    | password | password123    |
+  When I POST the admin login to "/api/auth/login"
   Then the response status should be 200
   And the response should contain "token"
   And the response should contain "user"
@@ -329,7 +353,7 @@ Background:
   Given I am on the login page with a clean session
 
 Scenario: Successful login with valid credentials
-  When I login with email "admin@test.com" and password "password123"
+  When I login as the admin user
   Then I should be redirected to the dashboard
   And I should see "E2E Testing Platform"
 ```
